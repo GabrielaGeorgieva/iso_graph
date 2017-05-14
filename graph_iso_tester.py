@@ -65,22 +65,70 @@ class GraphIsoTester(object):
                   if path_length == degree]
         return result
 
-    def one_step_color_refignment(self, colors):
-        """TODO: docstring
-        :param colors:
-        :return:
+    def add_colour_label(self, graph):
         """
-        # get initial colors of the disjoint union
-        pass
+        Add label 'colour' to graphs nodes and makes initial coloring.
+        Initial colour equals the degree of the node
+        :param graph: networkx Graph object
+        :return: graph: networkx graph with labels 'colour',
+                the next colour to use
+                and a list, containing all initial colours
+        """
+        # TODO: check if graph is empty and if so return message
+        degrees = graph.degree()
+        initial_colours = list(set(degrees.values()))
+        for one_node in graph.nodes():
+            graph.node[one_node]['colour'] = degrees[one_node]
+        return graph, max(degrees.values()) + 1, initial_colours
 
-    def color_refignment(self, X):
+    def group_by_colour(self, graph, initial_colours):
+        """
+        Group all nodes with the same colour.
+
+        :param graph: networkx grap hwith colour labels
+        :param initial_colours: list with the initial colours
+        :return: {
+                    colour_1: [list og nodes with colour_1]
+                    colour_2_ [list of nodes with colour_2]
+                    }
+        """
+        result = {}
+        for colour in initial_colours:
+            result[colour] = []
+            for one_node in graph.nodes():
+                if graph.node[one_node]['colour'] == colour:
+                    result[colour].append(one_node)
+        return result
+
+    def one_step_colour_refinement(self,
+                                   graph,
+                                   initial_colours,
+                                   next_colour):
+        """
+        Two nodes x and y get different colours
+        if there is some colour c such that
+        x and y have different number of neighbours of colour c
+        :param: graph:
+        :param: initial_colours
+        :param next_colour:
+        :return: networkx graph with new 'colour' label after one iterartion
+        """
+        colour_groups = self.group_by_colour(graph=graph,
+                                             initial_colours=initial_colours)
+        
+        return graph
+
+    def colour_refinement(self, graph):
         """
 
-        :param X: nx graph
-        :return: graph X is colored such that
-        no to neighbor nodes have the same color
+        :param graph: networkx graph
+        :return: graph: is colored such that
+        no two neighbor nodes have the same color
         """
-        # initial colors = degree of the nodes
-        initial_colors = X.degree()
-        # node and all its neighbors
-        n_hood = {node: X.neighbors(node) for node in X.nodes()}
+        graph, next_colour, initial_colours = self.add_colour_label(graph=graph)
+        new_graph = self.one_step_colour_refinement(
+            graph=graph,
+            initial_colours=initial_colours,
+            next_colour=next_colour
+        )
+        # n_hood = {node: X.neighbors(node) for node in X.nodes()}
